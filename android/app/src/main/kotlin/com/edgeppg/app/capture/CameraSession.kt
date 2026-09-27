@@ -295,9 +295,7 @@ class CameraSession(
                 meshPoints = res?.meshPoints ?: FloatArray(0),
                 faceBox = res?.faceBox,
             )
-            if (phoneResult.isPhoneDetected) {
-                listener.onPhoneDetected(true, phoneResult.reason)
-            }
+            listener.onPhoneDetected(phoneResult.isPhoneDetected, phoneResult.reason)
 
             if (res == null || res.rois == null || !res.facePresent) {
                 if (facePresent) {

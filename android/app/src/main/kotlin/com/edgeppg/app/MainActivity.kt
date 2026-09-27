@@ -1031,16 +1031,15 @@ class MainActivity : ComponentActivity(), FrameListener {
 
     override fun onFaceLost() {
         facePresent = false
-        // CRITICAL: Do NOT reset rppgClient or zero out controller metrics here.
-        // For spoof detection, the last-known SNR/roiCorr values from the
-        // photo/screen face ARE the evidence that the signal was weak/absent.
-        // Resetting them to 0 converts them to NaN in finalizeDecisionAndSend(),
-        // which makes the spoof heuristic unreachable → always UNCERTAIN.
-        // The rppgClient will be reset at the start of the next session.
         controller.liveHasFace = false
         lifecycleScope.launch(Dispatchers.Main.immediate) {
-            faceStatusView.text = "FACE: UNDETECTED"
-            faceStatusView.setTextColor(0xFFEF4444.toInt())
+            if (controller.livePhoneDetected) {
+                faceStatusView.text = "SPOOF DETECTED"
+                faceStatusView.setTextColor(0xFFEF4444.toInt())
+            } else {
+                faceStatusView.text = "FACE: UNDETECTED"
+                faceStatusView.setTextColor(0xFFEF4444.toInt())
+            }
             hrView.text = "HR: -- bpm"
             snrView.text = "SNR: -- dB"
             qualityView.text = "PERFUSION: --"
@@ -1051,9 +1050,14 @@ class MainActivity : ComponentActivity(), FrameListener {
     override fun onFaceRestored() {
         facePresent = true
         lifecycleScope.launch(Dispatchers.Main.immediate) {
-            faceStatusView.text = "FACE: DETECTED ✓"
-            faceStatusView.setTextColor(0xFF34D399.toInt())
-            rppgGraphView.setFlatline(false)
+            if (controller.livePhoneDetected) {
+                faceStatusView.text = "SPOOF DETECTED"
+                faceStatusView.setTextColor(0xFFEF4444.toInt())
+            } else {
+                faceStatusView.text = "FACE: DETECTED ✓"
+                faceStatusView.setTextColor(0xFF34D399.toInt())
+                rppgGraphView.setFlatline(false)
+            }
         }
         tryAdvanceToBaseline()
     }
@@ -1076,15 +1080,29 @@ class MainActivity : ComponentActivity(), FrameListener {
     }
 
     override fun onPhoneDetected(isDetected: Boolean, reason: String) {
-        controller.livePhoneDetected = true
+        controller.livePhoneDetected = isDetected
         controller.livePhoneReason = reason
         lifecycleScope.launch(Dispatchers.Main.immediate) {
-            faceStatusView.text = "SPOOF: PHONE DETECTED!"
-            faceStatusView.setTextColor(0xFFEF4444.toInt())
-            resultVerdictView.text = "SPOOF DETECTED"
-            resultVerdictView.setTextColor(0xFFEF4444.toInt())
-            resultDetailsView.text = "Secondary phone/screen attack detected: $reason"
-            resultCard.visibility = View.VISIBLE
+            if (isDetected) {
+                faceStatusView.text = "SPOOF DETECTED"
+                faceStatusView.setTextColor(0xFFEF4444.toInt())
+                resultVerdictView.text = "SPOOF DETECTED"
+                resultVerdictView.setTextColor(0xFFEF4444.toInt())
+                resultDetailsView.text = "Spoof presentation detected."
+                resultCard.visibility = View.VISIBLE
+            } else {
+                if (controller.state.value.state != SessionState.DONE) {
+                    resultCard.visibility = View.GONE
+                }
+                if (facePresent) {
+                    faceStatusView.text = "FACE: DETECTED ✓"
+                    faceStatusView.setTextColor(0xFF34D399.toInt())
+                    rppgGraphView.setFlatline(false)
+                } else {
+                    faceStatusView.text = "FACE: UNDETECTED"
+                    faceStatusView.setTextColor(0xFFEF4444.toInt())
+                }
+            }
         }
     }
 

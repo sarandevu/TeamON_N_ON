@@ -68,6 +68,7 @@ class PhoneScreenDetector(
 
     private val isRunningLabeler = AtomicBoolean(false)
     private var consecutiveDetections = 0
+    private var consecutiveCleanFrames = 0
     @Volatile var isPhoneDetected: Boolean = false
         private set
     @Volatile var lastReason: String = ""
@@ -76,6 +77,7 @@ class PhoneScreenDetector(
     /** Reset state for a fresh VKYC session. */
     fun reset() {
         consecutiveDetections = 0
+        consecutiveCleanFrames = 0
         isPhoneDetected = false
         lastReason = ""
     }
@@ -94,15 +96,6 @@ class PhoneScreenDetector(
         meshPoints: FloatArray,
         faceBox: Rect?,
     ): Result {
-        // Once latched as a phone attack during the session, remain latched.
-        if (isPhoneDetected) {
-            return Result(
-                isPhoneDetected = true,
-                reason = lastReason,
-                confidence = 0.99f
-            )
-        }
-
         var detectedByThisFrame = false
         var primaryReason = ""
         var maxConfidence = 0f
@@ -162,23 +155,25 @@ class PhoneScreenDetector(
         }
 
         if (detectedByThisFrame) {
-            consecutiveDetections++
-            Log.stage("detector", "PHONE DETECTED frame-hit #$consecutiveDetections: $primaryReason")
+            consecutiveCleanFrames = 0
+            consecutiveDetections = (consecutiveDetections + 1).coerceAtMost(5)
             if (consecutiveDetections >= minConsecutiveDetections || maxConfidence >= 0.85f) {
                 isPhoneDetected = true
                 lastReason = primaryReason
-                Log.stage("detector", "PHONE LATCHED -> SPOOF TRIGGERED: $lastReason")
             }
         } else {
-            if (consecutiveDetections > 0) {
-                consecutiveDetections--
+            consecutiveCleanFrames++
+            if (consecutiveCleanFrames >= 2) {
+                consecutiveDetections = 0
+                isPhoneDetected = false
+                lastReason = ""
             }
         }
 
         return Result(
             isPhoneDetected = isPhoneDetected,
-            reason = if (isPhoneDetected) lastReason else primaryReason,
-            confidence = maxConfidence,
+            reason = if (isPhoneDetected) lastReason else "",
+            confidence = if (isPhoneDetected) maxConfidence else 0f,
             planarityScore = planarityScore,
             bezelScore = bezelScore,
             detectedLabels = labelsFound,
