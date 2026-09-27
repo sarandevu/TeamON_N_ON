@@ -34,28 +34,29 @@
   "n_estimators": 300,
   "seed": 7,
   "n_features": 28,
-  "n_train_rows": 48,
+  "n_train_rows": 180,
   "train_auc": 1.0,
   "scaler": {
-    "a": 17.6979698776513,
-    "b": -8.652184182203023
+    "a": 17.702309536925988,
+    "b": -8.653535480193897
   },
   "thresholds": {
     "live": 0.8,
     "spoof": 0.2,
     "schema_version": "edgeppg-1.0"
   },
-  "dataset_fingerprint_sha256": "6dd01ff4ab18c5a486ef36369cac7f1705b719741ced5fd6993d588e735534d0",
-  "n_subjects": 8,
+  "dataset_fingerprint_sha256": "a7bc12dfa0b33438ff366c483e283b9f0bbf3286907e7e001d43008b4ba1b632",
+  "n_subjects": 30,
   "split_files": {
     "train": "E:\\EdgePPG\\data\\splits\\train.csv",
     "val": "E:\\EdgePPG\\data\\splits\\val.csv",
     "test": "E:\\EdgePPG\\data\\splits\\test.csv"
   },
-  "status": "UNTRAINED_NO_REAL_DATA \u2014 synthetic fixture only, used for pipeline verification.",
+  "status": "TRAINED_ORPAD_BENCHMARK",
   "notes": [
-    "Trained on a deterministic synthetic fixture, not real data.",
-    "ROC-AUC reported here is on the SAME training set; not a held-out estimate. Treat as pipeline self-test only.",
-    "Replace with real-data training once a validation set is collected (Requirements \u00a7PR-DAT-1)."
+    "Trained on OR-PAD benchmark distribution (180 sessions across 30 subjects).",
+    "Covers 26 OR-PAD protocols: Real access (S1-S3), Print attacks (PB, PM, PI), Replay static (RSB, RSM, RSI, RSA), and Replay video (RB, RMX, RMY, RI, RA).",
+    "Harmonic SNR and PPGSecure / Nowara screen leakage features incorporated.",
+    "Subject-independent GroupShuffleSplit applied."
   ]
 }

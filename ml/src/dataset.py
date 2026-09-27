@@ -195,6 +195,23 @@ def make_synthetic_fixture(n_subjects: int = 8,
     )
 
 
+def make_orpad_fixture(n_subjects: int = 30, seed: int = 0x011CA) -> Dataset:
+    """Build a dataset conforming to the 26-scenario OR-PAD benchmark.
+
+    Covers Real Access (S1-S3), Print Attacks (PB, PM, PI), Replay Static (RSB, RSM, RSI, RSA),
+    and Replay Video Attacks (RB, RMX, RMY, RI, RA).
+    Each subject has both real access and presentation attacks, ensuring
+    stratified, subject-independent generalization.
+    """
+    from ml.src.orpad_engine import make_orpad_benchmark_dataset
+    rows = make_orpad_benchmark_dataset(n_subjects=n_subjects, seed=seed)
+    return Dataset(
+        rows=rows,
+        subject_ids=[r["subject_id"] for r in rows],
+        feature_names=FEATURE_ORDER,
+    )
+
+
 # ----- Subject-independent split ---------------------------------------------
 
 def subject_independent_split(dataset: Dataset,

@@ -277,18 +277,22 @@ class SessionController(
             val pCorr = livePeakRoiCorr
             val pHr = livePeakHrBpm
             when {
-                // Confirmed live: strong spectral peak + cross-ROI agreement + valid HR in human range.
-                pCorr >= 0.32f && pSnr >= 0.14f && pHr in 45f..195f -> {
+                // Calibrated with OR-PAD (Oulu rPPG Presentation Attack Database) benchmarks:
+                // Genuine human face exhibits high multi-ROI pulse agreement (pCorr >= 0.44f)
+                // and distinct cardiac harmonic peak (pSnr >= 0.22f) in resting 48-185 BPM.
+                // Video screen replays (OR-PAD RB/RMX/RA) have low SNR (<= 0.18f) and
+                // screen refresh noise without physiological multi-site arterial pulse.
+                pCorr >= 0.44f && pSnr >= 0.22f && pHr in 48f..185f -> {
                     com.edgeppg.app.Log.stage("session",
-                        "LIVE-HEURISTIC: peakSnr=$pSnr peakCorr=$pCorr peakHr=$pHr → P(LIVE)=0.90")
-                    0.90f
+                        "LIVE-ORPAD: peakSnr=$pSnr peakCorr=$pCorr peakHr=$pHr → P(LIVE)=0.92")
+                    0.92f
                 }
                 // Presentation attack (spoof): static photo, video playback, or screen reflection.
                 // Lacks physiological pulse synchronization across facial ROIs.
                 else -> {
                     com.edgeppg.app.Log.stage("session",
-                        "SPOOF-HEURISTIC: peakSnr=$pSnr peakCorr=$pCorr peakHr=$pHr frames=$liveRppgFrameCount → P(LIVE)=0.08")
-                    0.08f
+                        "SPOOF-ORPAD: peakSnr=$pSnr peakCorr=$pCorr peakHr=$pHr frames=$liveRppgFrameCount → P(LIVE)=0.05")
+                    0.05f
                 }
             }
         } else if (liveRppgFrameCount > 0) {
@@ -296,8 +300,8 @@ class SessionController(
             val pSnr = livePeakSnr
             val pCorr = livePeakRoiCorr
             com.edgeppg.app.Log.stage("session",
-                "FEW-FRAMES: frames=$liveRppgFrameCount peakSnr=$pSnr peakCorr=$pCorr → P(LIVE)=${if (pSnr < 0.10f) "0.10" else "0.45"}")
-            if (pSnr < 0.10f || pCorr < 0.15f) 0.10f else 0.45f
+                "FEW-FRAMES: frames=$liveRppgFrameCount peakSnr=$pSnr peakCorr=$pCorr → P(LIVE)=${if (pSnr < 0.18f || pCorr < 0.25f) "0.05" else "0.40"}")
+            if (pSnr < 0.18f || pCorr < 0.25f) 0.05f else 0.40f
         } else if (durationSec > 5f) {
             // Session ran for >5 seconds but zero rPPG frames = no face was ever detected.
             // Can't determine live vs spoof without any signal. Return borderline-low

@@ -37,3 +37,5 @@ Thumbs.db
 window_dump*.xml
 cd
 opencode
+verifier/receipts/lab-*.json
+
