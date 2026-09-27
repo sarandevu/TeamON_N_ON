@@ -56,6 +56,8 @@ object DecisionEngine {
         val awbStability: Float,
         val challengeCompleted: Boolean,
         val liveProbability: Float,
+        val phoneDetected: Boolean = false,
+        val phoneReason: String = "",
     )
 
     /**
@@ -83,6 +85,15 @@ object DecisionEngine {
         //    if a critical signature / nonce failure is observed).
         if (!inputs.integrityOk) {
             return Verdict(Decision.SPOOF, "integrity-failure")
+        }
+
+        // 1b. Active Phone / Screen presentation attack detection.
+        // Direct enforcement: "if u see phone mark it spoof"
+        // Immediate, uncompromising SPOOF verdict when a secondary phone,
+        // screen bezel, or planar display attack is visible in frame.
+        if (inputs.phoneDetected) {
+            val r = if (inputs.phoneReason.isNotBlank()) "phone-detected-spoof:${inputs.phoneReason}" else "phone-detected-spoof"
+            return Verdict(Decision.SPOOF, r)
         }
 
         // 2. Insufficient quality — UNCERTAIN, never auto-SPOOF.

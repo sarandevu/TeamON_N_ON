@@ -1075,6 +1075,19 @@ class MainActivity : ComponentActivity(), FrameListener {
         tryAdvanceToBaseline()
     }
 
+    override fun onPhoneDetected(isDetected: Boolean, reason: String) {
+        controller.livePhoneDetected = true
+        controller.livePhoneReason = reason
+        lifecycleScope.launch(Dispatchers.Main.immediate) {
+            faceStatusView.text = "SPOOF: PHONE DETECTED!"
+            faceStatusView.setTextColor(0xFFEF4444.toInt())
+            resultVerdictView.text = "SPOOF DETECTED"
+            resultVerdictView.setTextColor(0xFFEF4444.toInt())
+            resultDetailsView.text = "Secondary phone/screen attack detected: $reason"
+            resultCard.visibility = View.VISIBLE
+        }
+    }
+
     companion object {
         private const val QUALITY_AUTO_SKIP_MS: Long = 10_000L
     }

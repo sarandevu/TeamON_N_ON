@@ -60,4 +60,6 @@ interface FrameListener {
     }
 
     fun onCameraFrame(frameNumber: Long, timestampNs: Long) {}
+
+    fun onPhoneDetected(isDetected: Boolean, reason: String) {}
 }

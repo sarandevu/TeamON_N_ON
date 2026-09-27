@@ -58,6 +58,7 @@ class CameraSession(
     private val listener: FrameListener,
     private val roiTracker: RoiTracker = RoiTracker(),
     private val qualityGate: QualityGate = QualityGate(),
+    private val phoneDetector: PhoneScreenDetector = PhoneScreenDetector(),
 ) : FrameListener {
     private var cameraProvider: ProcessCameraProvider? = null
     private var camera: androidx.camera.core.Camera? = null
@@ -109,6 +110,7 @@ class CameraSession(
         analysisExecutor.shutdown()
         lockController.reset()
         qualityGate.reset()
+        phoneDetector.reset()
         frameNumber = 0
         lastExposureNs = null
         lastSensitivityIso = null
@@ -285,6 +287,18 @@ class CameraSession(
 
             // 1. Run / reuse face-mesh ROIs.
             val res = roiTracker.update(image, imageProxy.imageInfo.rotationDegrees)
+
+            // 1b. Inspect frame for phone/secondary screen presentation attack
+            val phoneResult = phoneDetector.processFrame(
+                image = image,
+                rotationDegrees = imageProxy.imageInfo.rotationDegrees,
+                meshPoints = res?.meshPoints ?: FloatArray(0),
+                faceBox = res?.faceBox,
+            )
+            if (phoneResult.isPhoneDetected) {
+                listener.onPhoneDetected(true, phoneResult.reason)
+            }
+
             if (res == null || res.rois == null || !res.facePresent) {
                 if (facePresent) {
                     facePresent = false

@@ -68,6 +68,7 @@ class RoiTracker(
         val facePresent: Boolean,
         val hadFreshDetection: Boolean,
         val meshPoints: FloatArray = FloatArray(0),
+        val faceBox: Rect? = null,
     ) {
         /** Number of mesh points × 3 (x, y, z). */
         val meshPointCount: Int get() = meshPoints.size / 3
@@ -77,6 +78,7 @@ class RoiTracker(
     private val detecting = AtomicBoolean(false)
     private var lastRois: Rois? = null
     private var lastMesh: FloatArray = FloatArray(0) // 468 × 3 = 1404 floats
+    private var lastBox: Rect? = null
     private var framesSinceDetect = Int.MAX_VALUE
 
     /**
@@ -93,12 +95,12 @@ class RoiTracker(
         // Fast path: skip detection this frame; reuse last ROIs.
         if (framesSinceDetect < detectionEveryNFrames && lastRois != null) {
             return Result(rois = lastRois, facePresent = true,
-                          hadFreshDetection = false, meshPoints = lastMesh)
+                          hadFreshDetection = false, meshPoints = lastMesh, faceBox = lastBox)
         }
         // Only one in-flight detection at a time.
         if (!detecting.compareAndSet(false, true)) {
             return Result(rois = lastRois, facePresent = (lastRois != null),
-                          hadFreshDetection = false, meshPoints = lastMesh)
+                          hadFreshDetection = false, meshPoints = lastMesh, faceBox = lastBox)
         }
 
         return try {
@@ -113,8 +115,9 @@ class RoiTracker(
                 smooth = null
                 lastRois = null
                 lastMesh = FloatArray(0)
+                lastBox = null
                 framesSinceDetect = 0
-                Result(rois = null, facePresent = false, hadFreshDetection = true, meshPoints = lastMesh)
+                Result(rois = null, facePresent = false, hadFreshDetection = true, meshPoints = lastMesh, faceBox = null)
             } else {
                 val box = meshes[0].boundingBox
                 val raw = rawRoisFromBox(box, image.width, image.height)
@@ -128,16 +131,18 @@ class RoiTracker(
                          sm[10].roundToInt(), sm[11].roundToInt()),
                 )
                 lastMesh = extractMeshPoints(meshes[0])
+                lastBox = box
                 framesSinceDetect = 0
                 Result(rois = lastRois, facePresent = true,
-                       hadFreshDetection = true, meshPoints = lastMesh)
+                       hadFreshDetection = true, meshPoints = lastMesh, faceBox = lastBox)
             }
         } catch (t: Throwable) {
             com.edgeppg.app.Log.error("capture", "face mesh failed", t)
             smooth = null
             lastRois = null
+            lastBox = null
             Result(rois = null, facePresent = false,
-                   hadFreshDetection = false, meshPoints = lastMesh)
+                   hadFreshDetection = false, meshPoints = lastMesh, faceBox = null)
         } finally {
             detecting.set(false)
         }

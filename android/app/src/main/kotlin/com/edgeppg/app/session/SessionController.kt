@@ -96,6 +96,10 @@ class SessionController(
     @Volatile var liveAwbStability: Float = Float.NaN
     @Volatile var sessionStartTimeMs: Long = 0L
 
+    // Active phone / secondary screen detection
+    @Volatile var livePhoneDetected: Boolean = false
+    @Volatile var livePhoneReason: String = ""
+
     // Peak rPPG evidence across the entire session (for spoof detection).
     // These accumulate the best (highest) SNR/roiCorr seen during the session.
     // For a real person, peaks will be high (>0.35 SNR, >0.45 roiCorr).
@@ -128,6 +132,8 @@ class SessionController(
         livePeakRoiCorr = 0f
         livePeakHrBpm = 0f
         liveRppgFrameCount = 0
+        livePhoneDetected = false
+        livePhoneReason = ""
         if (_state.value.state != SessionState.CAPTURE) {
             // The state machine only accepts begin() from CAPTURE.
             // For a fresh session we reset and start over.
@@ -269,7 +275,11 @@ class SessionController(
         // temporarily lost at the exact moment of finalization, but the
         // rPPG evidence accumulated DURING the session (when face WAS present)
         // is still valid. Use rppgFrameCount > 0 to know if we ever had data.
-        val evaluatedLiveP = if (!liveP.isNaN()) {
+        val evaluatedLiveP = if (livePhoneDetected) {
+            com.edgeppg.app.Log.stage("session",
+                "PHONE-DETECTED-SPOOF: Secondary phone/screen in camera view ($livePhoneReason) → P(LIVE)=0.01")
+            0.01f
+        } else if (!liveP.isNaN()) {
             liveP
         } else if (liveRppgFrameCount >= 10) {
             // We have accumulated rPPG data (face was present for at least 10 frames).
@@ -326,6 +336,8 @@ class SessionController(
                 challengeCompleted = s.state == SessionState.PROCESSING
                     || s.state == SessionState.DONE,
                 liveProbability = evaluatedLiveP,
+                phoneDetected = livePhoneDetected,
+                phoneReason = livePhoneReason,
             ),
             thresholds = thresholds,
         )
@@ -367,11 +379,13 @@ class SessionController(
     private fun DecisionEngine.Verdict.decisionConfidence(signalQuality: Float = Float.NaN): Float {
         val base = when (this.decision) {
             DecisionEngine.Decision.LIVE -> 0.88f
-            DecisionEngine.Decision.SPOOF -> 0.12f
+            DecisionEngine.Decision.SPOOF -> {
+                if (this.reason.startsWith("phone-detected")) 0.02f else 0.12f
+            }
             DecisionEngine.Decision.UNCERTAIN -> 0.50f
         }
         return if (!signalQuality.isNaN() && signalQuality > 0f) {
-            (base * 0.7f + signalQuality.coerceIn(0f, 1f) * 0.3f).coerceIn(0.05f, 0.99f)
+            (base * 0.7f + signalQuality.coerceIn(0f, 1f) * 0.3f).coerceIn(0.02f, 0.99f)
         } else {
             base
         }

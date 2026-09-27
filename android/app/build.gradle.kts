@@ -80,6 +80,7 @@ dependencies {
     // docs — added here, only here, not earlier. Architecture §4.1 / §4.5
     // require 468-point landmarks; bounding-box-only would not suffice.
     implementation("com.google.mlkit:face-mesh-detection:16.0.0-beta1")
+    implementation("com.google.mlkit:image-labeling:17.0.9")
 
     // ---- Stage 13: Transport (Wi-Fi primary, QR fallback) ----
     // OkHttp 4.12.0 is the last 4.x line. JDK 8+, Android minSdk 21+,
