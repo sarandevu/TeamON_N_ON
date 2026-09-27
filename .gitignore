@@ -34,6 +34,7 @@ Thumbs.db
 *.png
 *.jpg
 *.jpeg
+*.mp4
 window_dump*.xml
 cd
 opencode

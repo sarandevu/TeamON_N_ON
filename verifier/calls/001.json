@@ -2,12 +2,28 @@
   "applicant_name": "User 1",
   "applicant_ref": "User1",
   "call_id": "001",
-  "completed_at_ms": null,
-  "connected_at_ms": null,
-  "created_at_ms": 1790490742698,
-  "result": null,
-  "scheduled_epoch_ms": null,
-  "scheduled_time": "2026-09-27T12:00",
-  "status": "SCHEDULED",
-  "waiting_since_ms": null
+  "completed_at_ms": 1790502633124,
+  "connected_at_ms": 1790502577959,
+  "created_at_ms": 1790502510715,
+  "result": {
+    "decision": "UNCERTAIN",
+    "receipt": "E:\\EdgePPG\\verifier\\receipts\\563f059d-30e1-44c1-8950-c21ccb522d61_1790502633207_f27ac01a98cb.json",
+    "telemetry": {
+      "challenge_id": "563f059d-30e1-44c1-8950-c21ccb522d61",
+      "confidence": 0.5212,
+      "decision": "UNCERTAIN",
+      "expected_seq": "[\"Hand:RAISE_RIGHT\",\"Head:TURN_UP\",\"Still:2604\",\"Head:NOD\",\"Still:2852\"]",
+      "hr_bpm": 105.4688,
+      "model_version": "v2.1-edge",
+      "nonce": "2c4bc8c0db17a55d70eb8b0642e331db",
+      "roi_corr": -0.0715,
+      "signal_quality": 0.5707,
+      "snr": 0.1693,
+      "timestamp_ms": 1790502633207
+    }
+  },
+  "scheduled_epoch_ms": 1790502480000,
+  "scheduled_time": "2026-09-27T15:18",
+  "status": "COMPLETED",
+  "waiting_since_ms": 1790502517195
 }
