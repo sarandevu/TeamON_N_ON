@@ -1,0 +1,13 @@
+{
+  "applicant_name": "Alex Morgan",
+  "applicant_ref": "APP-96821",
+  "call_id": "call-20260927-082206-82ea",
+  "completed_at_ms": null,
+  "connected_at_ms": null,
+  "created_at_ms": 1790497326508,
+  "result": null,
+  "scheduled_epoch_ms": null,
+  "scheduled_time": "2026-09-27T13:52",
+  "status": "SCHEDULED",
+  "waiting_since_ms": null
+}

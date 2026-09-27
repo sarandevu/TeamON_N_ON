@@ -1224,6 +1224,64 @@ DASHBOARD_HTML = """<!doctype html>
     catch (e) { return; }
     const calls = (data && data.calls) || [];
     document.getElementById("statCalls").textContent = calls.length + " Total";
+
+    if (data && data.live_session) {
+      const ls = data.live_session;
+      let liveBanner = document.getElementById("realtimeLiveBanner");
+      if (!liveBanner) {
+        liveBanner = document.createElement("div");
+        liveBanner.id = "realtimeLiveBanner";
+        liveBanner.style.margin = "16px 32px 0 32px";
+        liveBanner.style.padding = "14px 20px";
+        liveBanner.style.borderRadius = "14px";
+        liveBanner.style.fontWeight = "bold";
+        liveBanner.style.display = "flex";
+        liveBanner.style.justifyContent = "space-between";
+        liveBanner.style.alignItems = "center";
+        liveBanner.style.boxShadow = "0 4px 16px rgba(0,0,0,0.06)";
+        liveBanner.style.transition = "all 0.3s ease";
+        const container = document.querySelector(".container");
+        if (container) container.insertBefore(liveBanner, container.firstChild);
+      }
+      const isSpoof = Boolean(ls.spoof_detected || ls.is_spoof);
+      liveBanner.style.background = isSpoof ? "#FEF2F2" : "#F0FDF4";
+      liveBanner.style.border = isSpoof ? "2px solid #EF4444" : "2px solid #10B981";
+      liveBanner.style.color = isSpoof ? "#DC2626" : "#059669";
+      const statusIcon = isSpoof ? "🚨 SPOOF ALERT" : "📡 REALTIME APPLICANT STREAM";
+      const hrVal = ls.hr_bpm || ls.hr || 0;
+      const perfVal = ls.perfusion != null ? Number(ls.perfusion).toFixed(2) : "--";
+      const snrVal = ls.snr_db != null ? ls.snr_db : "--";
+      const stageTxt = ls.stage_desc || ls.state || "VERIFYING";
+      const lockTxt = ls.hardware_lock ? "🔒 Hardware Lock ✓" : "🔓 Locking…";
+      const faceTxt = ls.face_detected ? "👤 Face Detected" : "👤 No Face";
+
+      liveBanner.innerHTML = "<div><span style='font-size:13px;letter-spacing:0.04em'>" + statusIcon + "</span> "
+        + "<strong style='color:var(--text-main);margin-left:8px;font-size:14px'>" + esc(ls.applicant_ref || "Applicant") + "</strong> "
+        + "<span class='mono' style='font-size:12px;color:var(--brown-medium);margin-left:6px'>(" + esc(ls.call_id || "Direct") + ")</span> "
+        + "<span style='font-size:11px;margin-left:10px;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,0.05);color:var(--text-dim)'>" + esc(stageTxt) + "</span></div>"
+        + "<div class='mono' style='font-size:12px;display:flex;gap:12px;align-items:center'>"
+        + "<span>" + (hrVal > 0 ? "💓 " + hrVal + " BPM" : "💓 -- BPM") + "</span>"
+        + "<span>PERF: " + perfVal + "</span>"
+        + "<span>SNR: " + snrVal + " dB</span>"
+        + "<span style='font-size:11px;color:" + (ls.face_detected ? "#059669" : "#DC2626") + "'>" + faceTxt + "</span>"
+        + "<span style='font-size:11px;color:#4F46E5'>" + lockTxt + "</span></div>";
+      liveBanner.style.display = "flex";
+
+      // Also dynamically update active focal session indicators in real time
+      if (ls.call_id) {
+        document.getElementById("resCallId").textContent = ls.call_id;
+        document.getElementById("activeRef").textContent = ls.applicant_ref || "—";
+        document.getElementById("opCall").textContent = "STREAMING (LIVE)";
+        document.getElementById("opCall").style.color = "#34D399";
+        document.getElementById("opVerif").textContent = isSpoof ? "SPOOF DETECTED" : "IN_PROGRESS";
+        document.getElementById("opVerif").style.color = isSpoof ? "#EF4444" : "#FBBF24";
+      }
+    } else {
+      const liveBanner = document.getElementById("realtimeLiveBanner");
+      if (liveBanner) liveBanner.style.display = "none";
+    }
+
+
     const tb = document.querySelector("#calls tbody");
     tb.innerHTML = "";
     let waiting = null;
@@ -1510,6 +1568,9 @@ DASHBOARD_HTML = """<!doctype html>
 """.replace("__VER__", VERIFIER_VERSION)
 
 
+GLOBAL_LIVE_TELEMETRY: dict = {}
+
+
 class VerifierHandler(BaseHTTPRequestHandler):
     pubkey: str = ""
 
@@ -1541,9 +1602,13 @@ class VerifierHandler(BaseHTTPRequestHandler):
             self.wfile.write(html)
             return
         if self._route_path() == "/api/calls":
+            import time
+            calls = call_store.list_calls()
+            live = GLOBAL_LIVE_TELEMETRY if (time.time() - GLOBAL_LIVE_TELEMETRY.get("updated_at", 0) < 6) else None
             self._send_json(200, {
                 "ok": True,
-                "calls": call_store.list_calls(),
+                "calls": calls,
+                "live_session": live,
             })
             return
         if self._route_path() == "/api/lab/scenarios":
@@ -1582,6 +1647,17 @@ class VerifierHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         path = self._route_path()
+        if path == "/api/live":
+            payload, err = self._read_json_body()
+            if err is not None:
+                self._send_json(400, err)
+                return
+            import time
+            GLOBAL_LIVE_TELEMETRY.clear()
+            GLOBAL_LIVE_TELEMETRY.update(payload or {})
+            GLOBAL_LIVE_TELEMETRY["updated_at"] = time.time()
+            self._send_json(200, {"ok": True})
+            return
         if path == "/api/calls":
             payload, err = self._read_json_body()
             if err is not None:
@@ -1679,16 +1755,34 @@ class VerifierHandler(BaseHTTPRequestHandler):
             except Exception as e:  # noqa: BLE001
                 verdict = dict(verdict)
                 verdict["receipt_error"] = str(e)
-            # Optional call link: a client performing a scheduled call
-            # may include its `call_id` next to the envelope. This key
-            # is ignored by `verify_envelope` (it only reads
-            # data/sig/alg), so old clients sending 4 keys keep
-            # working. On a linked CONNECTED call we record COMPLETED.
+
+            # Link verification result to call and persist to disk
             call_id = env.get("call_id")
             if not call_id:
                 connected = [c for c in call_store.list_calls() if c.get("status") == call_store.CONNECTED]
                 if connected:
                     call_id = connected[-1].get("call_id")
+            if not call_id:
+                waiting = [c for c in call_store.list_calls() if c.get("status") == call_store.WAITING]
+                if waiting:
+                    call_id = waiting[-1].get("call_id")
+            if not call_id:
+                scheduled = [c for c in call_store.list_calls() if c.get("status") == call_store.SCHEDULED]
+                if scheduled:
+                    call_id = scheduled[-1].get("call_id")
+            if not call_id:
+                import time
+                auto_id = f"call-{time.strftime('%Y%m%d-%H%M%S')}-auto"
+                tel = verdict.get("telemetry") or {}
+                app_ref = tel.get("applicant_id") or "APP-DIRECT"
+                call_store.create_call(
+                    applicant_name="Direct Applicant",
+                    applicant_ref=app_ref,
+                    scheduled_time=time.strftime("%Y-%m-%dT%H:%M"),
+                    call_id=auto_id,
+                )
+                call_id = auto_id
+
             if isinstance(call_id, str) and call_id:
                 tel = verdict.get("telemetry") or {}
                 link = call_store.link_verification_result(

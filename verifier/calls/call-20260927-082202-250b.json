@@ -1,0 +1,29 @@
+{
+  "applicant_name": "Alex Morgan",
+  "applicant_ref": "APP-47115",
+  "call_id": "call-20260927-082202-250b",
+  "completed_at_ms": 1790501901196,
+  "connected_at_ms": 1790501843761,
+  "created_at_ms": 1790497322888,
+  "result": {
+    "decision": "SPOOF",
+    "receipt": "E:\\EdgePPG\\verifier\\receipts\\f87d7c65-392a-45a0-8f2d-a9a81b43b40b_1790501901221_a2e55554155a.json",
+    "telemetry": {
+      "challenge_id": "f87d7c65-392a-45a0-8f2d-a9a81b43b40b",
+      "confidence": 0.0963,
+      "decision": "SPOOF",
+      "expected_seq": "[\"Head:TURN_UP\",\"Gaze:LEFT\",\"Head:SHAKE_NO\",\"Gaze:RIGHT\",\"Still:2654\"]",
+      "hr_bpm": 0,
+      "model_version": "v2.1-edge",
+      "nonce": "7cf593025ac7a3f03607b4ecfb7178a3",
+      "roi_corr": 0,
+      "signal_quality": 0.041,
+      "snr": 0,
+      "timestamp_ms": 1790501901221
+    }
+  },
+  "scheduled_epoch_ms": null,
+  "scheduled_time": "2026-09-27T13:52",
+  "status": "COMPLETED",
+  "waiting_since_ms": 1790499148310
+}

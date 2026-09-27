@@ -112,9 +112,10 @@ class MainActivity : ComponentActivity(), FrameListener {
     @Volatile private var peakHrBpm = 0f
 
     // Transport & Controllers
-    private val transport: Transport = LocalWifiTransport()
+    private val transport = LocalWifiTransport()
     private val controller = SessionController(transport = transport)
     private val callController = CallController()
+    private var lastLiveBroadcastMs = 0L
     private var currentChallengeIndex = 0
     private val challenges: MutableList<ChallengeSpec> = mutableListOf()
     private var pendingSessionSeed: String? = null
@@ -254,6 +255,7 @@ class MainActivity : ComponentActivity(), FrameListener {
         } else {
             cameraPermissionLauncher.launch(perm)
         }
+        syncFromPc()
     }
 
     override fun onResume() {
@@ -262,6 +264,7 @@ class MainActivity : ComponentActivity(), FrameListener {
         if (ContextCompat.checkSelfPermission(this, perm) == PackageManager.PERMISSION_GRANTED) {
             ensureCameraStarted()
         }
+        syncFromPc()
     }
 
     private fun ensureCameraStarted() {
@@ -415,6 +418,19 @@ class MainActivity : ComponentActivity(), FrameListener {
             ).apply { bottomMargin = dp(12) }
         }
 
+        val syncButton = Button(this).apply {
+            text = "🔄 SYNC ACTIVE CALL FROM PC"
+            textSize = 12f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(0xFF38BDF8.toInt())
+            background = makeShape(0x1F0284C7.toInt(), 0x550284C7.toInt(), 1, 8)
+            setOnClickListener { syncFromPc() }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(38)
+            ).apply { bottomMargin = dp(8) }
+        }
+
         joinButton = Button(this).apply {
             text = "START / JOIN VERIFICATION ➔"
             textSize = 13f
@@ -434,6 +450,7 @@ class MainActivity : ComponentActivity(), FrameListener {
         profileBody.addView(callIdInput)
         profileBody.addView(callLabel)
         profileBody.addView(callStatusView)
+        profileBody.addView(syncButton)
         profileBody.addView(joinButton)
         profileSection.addView(profileBody)
         root.addView(profileSection)
@@ -671,11 +688,71 @@ class MainActivity : ComponentActivity(), FrameListener {
         setContentView(scrollView)
     }
 
+    private fun syncFromPc() {
+        callStatusView.text = "🔄 Syncing with PC verifier at 127.0.0.1:8080…"
+        callStatusView.setTextColor(0xFF38BDF8.toInt())
+        lifecycleScope.launch {
+            val active = transport.fetchActiveCall()
+            if (active != null) {
+                val (cid, ref, name) = active
+                callIdInput.setText(cid)
+                applicantRefInput.setText(ref)
+                transport.activeCallId = cid
+                transport.activeApplicantRef = ref
+                callStatusView.text = "✅ Synced call $cid for $name ($ref)"
+                callStatusView.setTextColor(0xFF34D399.toInt())
+            } else {
+                callStatusView.text = "⚡ PC server offline — tap 'SYNC ACTIVE CALL' when connected"
+                callStatusView.setTextColor(0xFFFDE68A.toInt())
+            }
+        }
+    }
+
+    private fun streamLiveProgress(stageDesc: String = "") {
+        val now = System.currentTimeMillis()
+        if (now - lastLiveBroadcastMs < 700L) return
+        lastLiveBroadcastMs = now
+
+        val cid = callIdInput.text?.toString().orEmpty()
+        val ref = applicantRefInput.text?.toString().orEmpty()
+        val stateName = controller.state.value.state.name
+        val hr = controller.liveHrBpm
+        val snr = controller.liveSnr
+        val corr = controller.liveRoiCorr
+        val fps = lastFps.toFloat()
+        val face = facePresent
+        val isLocked = locked
+        val spoof = controller.livePhoneDetected || controller.state.value.lastDecision?.name == "SPOOF"
+        val reason = controller.livePhoneReason
+
+        val json = org.json.JSONObject().apply {
+            put("call_id", cid)
+            put("applicant_ref", ref)
+            put("state", stateName)
+            put("stage_desc", stageDesc)
+            put("hr_bpm", if (hr > 0f) hr.toInt() else 0)
+            put("snr_db", if (!snr.isNaN()) "%.1f".format(snr) else "0.0")
+            put("perfusion", if (!corr.isNaN()) "%.2f".format(corr) else "0.00")
+            put("fps", "%.1f".format(fps))
+            put("face_detected", face)
+            put("hardware_lock", isLocked)
+            put("spoof_detected", spoof)
+            put("spoof_reason", reason)
+            put("timestamp_ms", now)
+        }.toString()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            transport.sendLiveProgress(json)
+        }
+    }
+
     fun onJoinClicked() = onJoinOrStartClicked()
 
     private fun onJoinOrStartClicked() {
         val callId = callIdInput.text?.toString().orEmpty()
         val ref = applicantRefInput.text?.toString().orEmpty()
+        transport.activeCallId = callId
+        transport.activeApplicantRef = ref
         callController.setScheduled(callId, ref)
 
         joinButton.isEnabled = false
@@ -772,6 +849,7 @@ class MainActivity : ComponentActivity(), FrameListener {
                 challengeDescView.text = "Initializing verification pipeline…"
                 challengePacingView.text = "Align face in camera preview."
                 actionButton.isEnabled = false
+                streamLiveProgress("STANDBY: Initializing")
             }
             SessionState.QUALITY_CHECK -> {
                 challengeTitleView.text = "ALIGN FACE IN FRAME"
@@ -783,12 +861,14 @@ class MainActivity : ComponentActivity(), FrameListener {
                     controller.qualityPass()
                     controller.baselineComplete()
                 }
+                streamLiveProgress("QUALITY CHECK: Aligning face")
             }
             SessionState.BASELINE -> {
                 challengeTitleView.text = "PHYSIOLOGICAL BASELINE"
                 challengeDescView.text = "Capturing rPPG pulse baseline… hold still."
                 challengePacingView.text = "Reading ambient perfusion dynamics…"
                 actionButton.isEnabled = false
+                streamLiveProgress("BASELINE: Capturing rPPG pulse")
             }
             SessionState.RANDOMIZED_CHALLENGE -> {
                 if (behaviourRunner?.isRunning() != true) {
@@ -803,6 +883,7 @@ class MainActivity : ComponentActivity(), FrameListener {
                 actionButton.isEnabled = true
                 actionButton.text = "Skip (motion / blink ok)"
                 actionButton.setOnClickListener { tryAdvanceMotionBlink() }
+                streamLiveProgress("MOTION CHECK: Passive blink & micro-movement")
 
                 if (!motionAutoAdvanced) {
                     motionAutoAdvanced = true
@@ -817,6 +898,7 @@ class MainActivity : ComponentActivity(), FrameListener {
                 challengeDescView.text = "Evaluating rPPG correlation & signing envelope…"
                 challengePacingView.text = "Dispatching cryptographic verdict…"
                 actionButton.isEnabled = false
+                streamLiveProgress("PROCESSING: Evaluating & signing attestation")
 
                 if (!autoDispatched) {
                     autoDispatched = true
@@ -834,32 +916,34 @@ class MainActivity : ComponentActivity(), FrameListener {
                 val d = snap.lastDecision
                 val r = snap.lastResult
                 val decName = d?.name ?: "?"
+                val receipt = r?.receiptPath?.takeIf { it.isNotEmpty() } ?: "Saved on PC"
                 when (decName) {
                     "LIVE" -> {
                         resultCard.background = makeShape(0xF0064E3B.toInt(), 0xFF10B981.toInt(), 2, 12)
                         resultVerdictView.text = "🛡️ VERIFIED LIVE APPLICANT"
                         resultVerdictView.setTextColor(0xFF34D399.toInt())
-                        resultDetailsView.text = "Verdict: LIVE (Authentication Passed)\nHardware Integrity: SECP256R1 Signed ✓\nTransport: ${r?.httpStatus ?: 200} OK"
+                        resultDetailsView.text = "Verdict: LIVE (Authentication Passed)\nReceipt: $receipt\nHardware Integrity: SECP256R1 Signed ✓\nPC Verifier: ${r?.httpStatus ?: 200} OK"
                         resultDetailsView.setTextColor(0xFFD1FAE5.toInt())
                     }
                     "SPOOF" -> {
                         resultCard.background = makeShape(0xF07F1D1D.toInt(), 0xFFEF4444.toInt(), 2, 12)
                         resultVerdictView.text = "⚠️ SYNTHETIC SPOOF DETECTED"
                         resultVerdictView.setTextColor(0xFFF87171.toInt())
-                        resultDetailsView.text = "Verdict: SPOOF (Rejected)\nReason: ${r?.reason ?: "Liveness threshold failed"}"
+                        resultDetailsView.text = "Verdict: SPOOF (Rejected)\nReceipt: $receipt\nReason: ${r?.reason ?: "Liveness threshold failed"}"
                         resultDetailsView.setTextColor(0xFFFEE2E2.toInt())
                     }
                     else -> {
                         resultCard.background = makeShape(0xF078350F.toInt(), 0xFFF59E0B.toInt(), 2, 12)
                         resultVerdictView.text = "⚠️ INCONCLUSIVE SESSION"
                         resultVerdictView.setTextColor(0xFFFBBF24.toInt())
-                        resultDetailsView.text = "Verdict: $decName\nReason: ${r?.reason ?: "Lighting or movement unstable"}"
+                        resultDetailsView.text = "Verdict: $decName\nReceipt: $receipt\nReason: ${r?.reason ?: "Lighting or movement unstable"}"
                         resultDetailsView.setTextColor(0xFFFEF3C7.toInt())
                     }
                 }
                 actionButton.isEnabled = true
                 actionButton.text = "Start new session"
                 actionButton.setOnClickListener { startSession() }
+                streamLiveProgress("Verification completed: $decName")
             }
         }
     }
@@ -895,6 +979,7 @@ class MainActivity : ComponentActivity(), FrameListener {
         challengeTitleView.text = "$icon $title (CHALLENGE ${idx + 1} OF ${challenges.size})"
         challengeDescView.text = "▶  $desc  ◀"
         challengePacingView.text = "Window: ~${sec}s • Analyzing automatically…"
+        streamLiveProgress("CHALLENGE ${idx + 1}/${challenges.size}: $desc")
 
         actionButton.isEnabled = true
         actionButton.text = "Skip challenge"
@@ -1005,15 +1090,13 @@ class MainActivity : ComponentActivity(), FrameListener {
                         qualityView.text = "PERFUSION: ${"%.2f".format(corr)}"
                     }
                 }
+                streamLiveProgress("rPPG pulse: ${hr.toInt()} BPM")
             }
         }
     }
 
     override fun onLockStateChanged(locked: Boolean) {
         this.locked = locked
-        // Do NOT reset rppgClient here. The accumulated rPPG evidence
-        // (peak SNR, roiCorr) must persist across the session for accurate
-        // live/spoof assessment. rppgClient is only reset at session start.
         lifecycleScope.launch(Dispatchers.Main.immediate) {
             if (locked) {
                 lockStatusView.text = "LOCK: LOCKED ✓"
@@ -1026,6 +1109,7 @@ class MainActivity : ComponentActivity(), FrameListener {
                 }
             }
         }
+        streamLiveProgress(if (locked) "Hardware locked ✓" else "Lock converging…")
         tryAdvanceToBaseline()
     }
 
@@ -1045,6 +1129,7 @@ class MainActivity : ComponentActivity(), FrameListener {
             qualityView.text = "PERFUSION: --"
             rppgGraphView.setFlatline(true)
         }
+        streamLiveProgress("Face lost")
     }
 
     override fun onFaceRestored() {
@@ -1059,6 +1144,7 @@ class MainActivity : ComponentActivity(), FrameListener {
                 rppgGraphView.setFlatline(false)
             }
         }
+        streamLiveProgress("Face detected")
         tryAdvanceToBaseline()
     }
 
@@ -1104,7 +1190,9 @@ class MainActivity : ComponentActivity(), FrameListener {
                 }
             }
         }
+        streamLiveProgress(if (isDetected) "SPOOF: $reason" else "Biometrics normal")
     }
+
 
     companion object {
         private const val QUALITY_AUTO_SKIP_MS: Long = 10_000L
