@@ -1,0 +1,20 @@
+{
+  "reason": null,
+  "telemetry": {
+    "challenge_id": "63577d27-cd32-4ae3-8f0a-fc8b052ee463",
+    "confidence": 0.65,
+    "decision": "UNCERTAIN",
+    "expected_seq": "[\"Hand:RAISE_RIGHT\",\"Gaze:UP\",\"Hand:THUMBS_UP\",\"Head:TURN_UP\",\"Still:2177\"]",
+    "hr_bpm": 42.1875,
+    "model_version": "v2.1-edge",
+    "nonce": "89afac2c56f47743cb88a4accdfcf349",
+    "roi_corr": 0.1268,
+    "signal_quality": 1,
+    "snr": 0.3969,
+    "timestamp_ms": 1790487902986
+  },
+  "telemetry_sha256": "ad8342b5143b937493e456ac12408114b2377d315173988885726fb6d0938ddf",
+  "verdict": "ok",
+  "verified_at_ms": 1790487903487,
+  "verifier_version": "edgeppg-baseline-1.0"
+}

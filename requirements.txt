@@ -1,0 +1,27 @@
+# EdgePPG PC-side runtime + dev requirements.
+#
+# The verified Windows venv at `.venv/` already has every package below
+# EXCEPT `cryptography`, which must be added once:
+#
+#     .venv\Scripts\python.exe -m pip install cryptography
+#
+# Versions below are the ones installed in the verified env at the time of
+# writing; new envs should pin to these for reproducibility.
+
+# --- PC-side runtime (verifier + receiver) ---
+cryptography>=42.0.0  # ECDSA P-256 / SHA-256 over the canonical envelope
+
+# --- PC-side training / evaluation pipeline (PC only; runtime never trains) ---
+numpy>=2.0
+pandas>=3.0
+scikit-learn>=1.5
+xgboost>=2.0
+
+# --- PC-side dataset / image tooling (offline feature extraction helpers) ---
+opencv-python>=4.10
+mediapipe>=0.10      # for offline face-mesh / hand landmark reference impls
+Pillow>=10.0         # image I/O for offline fixture generation
+
+# --- Tests ---
+# We deliberately do NOT pin pytest — the verified env may not have it.
+# All tests run via stdlib unittest (see tests/run_all_tests.py).

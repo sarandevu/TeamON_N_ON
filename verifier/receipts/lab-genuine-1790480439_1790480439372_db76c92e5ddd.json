@@ -1,0 +1,20 @@
+{
+  "reason": null,
+  "telemetry": {
+    "challenge_id": "lab-genuine-1790480439",
+    "confidence": 0.9999,
+    "decision": "LIVE",
+    "expected_seq": "TURN_L,BLINK,FLASH_BLUE",
+    "hr_bpm": 74,
+    "model_version": "v2.1-edge",
+    "nonce": "labnonce61212263",
+    "roi_corr": 0.85,
+    "signal_quality": 0.88,
+    "snr": 0.74,
+    "timestamp_ms": 1790480439372
+  },
+  "telemetry_sha256": "db76c92e5ddd8afd51d5c7408d86eba039c0e0de18de36f6eae4dcb018cbe6ec",
+  "verdict": "ok",
+  "verified_at_ms": 1790480439375,
+  "verifier_version": "edgeppg-baseline-1.0"
+}

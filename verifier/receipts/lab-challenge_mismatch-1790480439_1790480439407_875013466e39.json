@@ -1,0 +1,20 @@
+{
+  "reason": null,
+  "telemetry": {
+    "challenge_id": "lab-challenge_mismatch-1790480439",
+    "confidence": 0.9999,
+    "decision": "UNCERTAIN",
+    "expected_seq": "TURN_L,FAILED",
+    "hr_bpm": 68,
+    "model_version": "v2.1-edge",
+    "nonce": "labnonce79257548",
+    "roi_corr": 0.82,
+    "signal_quality": 0.85,
+    "snr": 0.68,
+    "timestamp_ms": 1790480439407
+  },
+  "telemetry_sha256": "875013466e3981e177719fa6fd1c4cd9d89a41382a65576969e894ed5d610b3a",
+  "verdict": "ok",
+  "verified_at_ms": 1790480439408,
+  "verifier_version": "edgeppg-baseline-1.0"
+}

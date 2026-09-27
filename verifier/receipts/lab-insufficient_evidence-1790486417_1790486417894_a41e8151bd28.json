@@ -1,0 +1,20 @@
+{
+  "reason": null,
+  "telemetry": {
+    "challenge_id": "lab-insufficient_evidence-1790486417",
+    "confidence": 0.0002,
+    "decision": "UNCERTAIN",
+    "expected_seq": "TURN_L,FAILED",
+    "hr_bpm": 6,
+    "model_version": "v2.1-edge",
+    "nonce": "labnonce29825408",
+    "roi_corr": 0.08,
+    "signal_quality": 0.35,
+    "snr": 0.06,
+    "timestamp_ms": 1790486417894
+  },
+  "telemetry_sha256": "a41e8151bd2801c6626513b836fb907ed0cf437e6744d598d3b5a3bbf49819e6",
+  "verdict": "ok",
+  "verified_at_ms": 1790486417897,
+  "verifier_version": "edgeppg-baseline-1.0"
+}

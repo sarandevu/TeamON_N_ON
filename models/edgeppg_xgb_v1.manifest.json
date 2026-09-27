@@ -1,0 +1,56 @@
+{
+  "schema_version": "edgeppg-1.0",
+  "feature_names": [
+    "face_confidence",
+    "face_quality",
+    "rppg_snr",
+    "rppg_peak_strength",
+    "rppg_hr_stability",
+    "rppg_roi_agreement",
+    "gaze_accuracy",
+    "head_accuracy",
+    "hand_accuracy",
+    "challenge_timing_error",
+    "optical_response_score",
+    "trusted_face_confidence",
+    "trusted_face_quality",
+    "trusted_gaze_accuracy",
+    "trusted_head_accuracy",
+    "trusted_hand_accuracy",
+    "trusted_challenge_timing_error",
+    "cross_person_timing",
+    "cross_person_interaction",
+    "relative_motion_consistency",
+    "participant_presence_consistency",
+    "challenge_sequence_consistency",
+    "camera_quality",
+    "frame_drop_rate",
+    "exposure_stability",
+    "awb_stability",
+    "capture_duration",
+    "device_integrity"
+  ],
+  "model_type": "XGBClassifier",
+  "n_estimators": 300,
+  "seed": 7,
+  "n_features": 28,
+  "n_train_rows": 48,
+  "train_auc": 1.0,
+  "scaler": {
+    "a": 19.185739391613154,
+    "b": -9.491614491932266
+  },
+  "thresholds": {
+    "live": 0.8,
+    "spoof": 0.2,
+    "schema_version": "edgeppg-1.0"
+  },
+  "dataset_fingerprint_sha256": "f525257e0e24f91eeff0114de92215a0909ee08b790c4289810d588d04242c8f",
+  "n_subjects": 8,
+  "split_files": {
+    "train": "E:\\EdgePPG\\data\\splits\\train.csv",
+    "val": "E:\\EdgePPG\\data\\splits\\val.csv",
+    "test": "E:\\EdgePPG\\data\\splits\\test.csv"
+  },
+  "status": "UNTRAINED_NO_REAL_DATA \u2014 synthetic fixture only."
+}

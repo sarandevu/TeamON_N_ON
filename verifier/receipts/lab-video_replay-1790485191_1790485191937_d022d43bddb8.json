@@ -1,0 +1,20 @@
+{
+  "reason": null,
+  "telemetry": {
+    "challenge_id": "lab-video_replay-1790485191",
+    "confidence": 0.9999,
+    "decision": "UNCERTAIN",
+    "expected_seq": "TURN_L,FAILED",
+    "hr_bpm": 16,
+    "model_version": "v2.1-edge",
+    "nonce": "labnonce46501816",
+    "roi_corr": 0.22,
+    "signal_quality": 0.82,
+    "snr": 0.16,
+    "timestamp_ms": 1790485191937
+  },
+  "telemetry_sha256": "d022d43bddb88362eb662e6802f212100c1ae42959c86cb6cc242ca3ed9c5eff",
+  "verdict": "ok",
+  "verified_at_ms": 1790485191938,
+  "verifier_version": "edgeppg-baseline-1.0"
+}

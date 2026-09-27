@@ -1,0 +1,466 @@
+[
+  {
+    "session_id": "lab-screen_image-1790486395",
+    "timestamp_ms": 1790486395005,
+    "scenario_id": "screen_image",
+    "title": "3. Screen Image",
+    "category": "Presentation Attack",
+    "attack_type": "Digital 2D Display (OLED/LCD)",
+    "media_input": "Smartphone OLED display (1080p still image) held 30cm from camera.",
+    "expected_hypothesis": "Screen backlighting fails dermal pulse extraction (SNR < 0.08, ROI agreement ~ 0.03), dynamic prompt fails, chromatic optical test reveals specular screen reflection -> Evaluates to SPOOF.",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "\u2713 Verified",
+      "rppg": "Insufficient / Flat",
+      "behavior": "Mismatched",
+      "challenge": "Failed / Incomplete",
+      "camera": "\u2713 Calibrated",
+      "integrity": "\u2713 Enclave Valid",
+      "snr": "0.050",
+      "roi_corr": "0.030",
+      "hr_bpm": "5 bpm",
+      "timing_error": "2.70s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.0002,
+      "p_live_percent": "0.0%",
+      "raw_score": 0.0432,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Threshold Gate (Spoof Detected)",
+      "gate_reason": "p(live)<=spoof-threshold:0.0002",
+      "passed": false
+    },
+    "final_decision": "SPOOF",
+    "crypto_verdict": {
+      "ok": true,
+      "reason": null,
+      "sha256": "02fcddc7c064\u2026",
+      "receipt": "lab-screen_image-1790486395_1790486395005_02fcddc7c064.json"
+    },
+    "telemetry": {
+      "challenge_id": "lab-screen_image-1790486395",
+      "confidence": 0.0002,
+      "decision": "SPOOF",
+      "expected_seq": "TURN_L,FAILED",
+      "hr_bpm": 5.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce12228925",
+      "roi_corr": 0.03,
+      "signal_quality": 0.62,
+      "snr": 0.05,
+      "timestamp_ms": 1790486395005
+    }
+  },
+  {
+    "session_id": "lab-genuine-1790486417",
+    "timestamp_ms": 1790486417860,
+    "scenario_id": "genuine",
+    "title": "1. Genuine Applicant",
+    "category": "Benchmark Baseline",
+    "attack_type": "None (Live Human)",
+    "media_input": "Live Camera Stream: 30 FPS, human facial tissue, synchronous forehead & cheek perfusion, accurate gaze/pose execution.",
+    "expected_hypothesis": "Strong rPPG signal (SNR > 0.70), high spatial ROI agreement (> 0.80), challenge accuracy (> 0.90), high P(LIVE) >= 0.80 -> Evaluates to LIVE.",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "\u2713 Verified",
+      "rppg": "\u2713 Pulse Active",
+      "behavior": "\u2713 Consistent",
+      "challenge": "\u2713 Verified",
+      "camera": "\u2713 Calibrated",
+      "integrity": "\u2713 Enclave Valid",
+      "snr": "0.740",
+      "roi_corr": "0.850",
+      "hr_bpm": "74 bpm",
+      "timing_error": "0.18s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.9999,
+      "p_live_percent": "100.0%",
+      "raw_score": 0.9568,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Threshold Gate (Live Pass)",
+      "gate_reason": "p(live)>=live-threshold:0.9999",
+      "passed": true
+    },
+    "final_decision": "LIVE",
+    "crypto_verdict": {
+      "ok": true,
+      "reason": null,
+      "sha256": "5798a8f62e12\u2026",
+      "receipt": "lab-genuine-1790486417_1790486417860_5798a8f62e12.json"
+    },
+    "telemetry": {
+      "challenge_id": "lab-genuine-1790486417",
+      "confidence": 0.9999,
+      "decision": "LIVE",
+      "expected_seq": "TURN_L,BLINK,FLASH_BLUE",
+      "hr_bpm": 74.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce70404432",
+      "roi_corr": 0.85,
+      "signal_quality": 0.88,
+      "snr": 0.74,
+      "timestamp_ms": 1790486417860
+    }
+  },
+  {
+    "session_id": "lab-printed_photo-1790486417",
+    "timestamp_ms": 1790486417873,
+    "scenario_id": "printed_photo",
+    "title": "2. Printed Photo",
+    "category": "Presentation Attack",
+    "attack_type": "Physical 2D Static Photo",
+    "media_input": "Physical 300 DPI glossy photo printout positioned within camera frame.",
+    "expected_hypothesis": "Face detected, but rPPG SNR is noise floor (< 0.08), ROI agreement is decorrelated (~0.02), zero challenge response, optical flash specular. Model outputs very low P(LIVE) <= 0.20 -> Evaluates to SPOOF.",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "Weak",
+      "rppg": "Insufficient / Flat",
+      "behavior": "Mismatched",
+      "challenge": "Failed / Incomplete",
+      "camera": "\u2713 Calibrated",
+      "integrity": "\u2713 Enclave Valid",
+      "snr": "0.040",
+      "roi_corr": "0.020",
+      "hr_bpm": "4 bpm",
+      "timing_error": "2.80s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.0002,
+      "p_live_percent": "0.0%",
+      "raw_score": 0.0432,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Threshold Gate (Spoof Detected)",
+      "gate_reason": "p(live)<=spoof-threshold:0.0002",
+      "passed": false
+    },
+    "final_decision": "SPOOF",
+    "crypto_verdict": {
+      "ok": true,
+      "reason": null,
+      "sha256": "026bfd4b2eba\u2026",
+      "receipt": "lab-printed_photo-1790486417_1790486417873_026bfd4b2eba.json"
+    },
+    "telemetry": {
+      "challenge_id": "lab-printed_photo-1790486417",
+      "confidence": 0.0002,
+      "decision": "SPOOF",
+      "expected_seq": "TURN_L,FAILED",
+      "hr_bpm": 4.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce64201216",
+      "roi_corr": 0.02,
+      "signal_quality": 0.58,
+      "snr": 0.04,
+      "timestamp_ms": 1790486417873
+    }
+  },
+  {
+    "session_id": "lab-screen_image-1790486417",
+    "timestamp_ms": 1790486417878,
+    "scenario_id": "screen_image",
+    "title": "3. Screen Image",
+    "category": "Presentation Attack",
+    "attack_type": "Digital 2D Display (OLED/LCD)",
+    "media_input": "Smartphone OLED display (1080p still image) held 30cm from camera.",
+    "expected_hypothesis": "Screen backlighting fails dermal pulse extraction (SNR < 0.08, ROI agreement ~ 0.03), dynamic prompt fails, chromatic optical test reveals specular screen reflection -> Evaluates to SPOOF.",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "\u2713 Verified",
+      "rppg": "Insufficient / Flat",
+      "behavior": "Mismatched",
+      "challenge": "Failed / Incomplete",
+      "camera": "\u2713 Calibrated",
+      "integrity": "\u2713 Enclave Valid",
+      "snr": "0.050",
+      "roi_corr": "0.030",
+      "hr_bpm": "5 bpm",
+      "timing_error": "2.70s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.0002,
+      "p_live_percent": "0.0%",
+      "raw_score": 0.0432,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Threshold Gate (Spoof Detected)",
+      "gate_reason": "p(live)<=spoof-threshold:0.0002",
+      "passed": false
+    },
+    "final_decision": "SPOOF",
+    "crypto_verdict": {
+      "ok": true,
+      "reason": null,
+      "sha256": "3fe7c0050337\u2026",
+      "receipt": "lab-screen_image-1790486417_1790486417878_3fe7c0050337.json"
+    },
+    "telemetry": {
+      "challenge_id": "lab-screen_image-1790486417",
+      "confidence": 0.0002,
+      "decision": "SPOOF",
+      "expected_seq": "TURN_L,FAILED",
+      "hr_bpm": 5.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce90277570",
+      "roi_corr": 0.03,
+      "signal_quality": 0.62,
+      "snr": 0.05,
+      "timestamp_ms": 1790486417878
+    }
+  },
+  {
+    "session_id": "lab-video_replay-1790486417",
+    "timestamp_ms": 1790486417884,
+    "scenario_id": "video_replay",
+    "title": "4. Video Replay",
+    "category": "Presentation Attack",
+    "attack_type": "Dynamic Video Replay",
+    "media_input": "Prerecorded MP4 1080p video of genuine applicant smiling/moving, played on tablet display.",
+    "expected_hypothesis": "Face detected on external display, but prerecorded video cannot predict fresh challenge prompts, screen emission lacks physiological capillary pulse, and optical chromatic flash is desynchronized -> Evaluates to SPOOF.",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "\u2713 Verified",
+      "rppg": "Insufficient / Flat",
+      "behavior": "Mismatched",
+      "challenge": "Failed / Incomplete",
+      "camera": "\u2713 Calibrated",
+      "integrity": "\u2713 Enclave Valid",
+      "snr": "0.050",
+      "roi_corr": "0.020",
+      "hr_bpm": "5 bpm",
+      "timing_error": "2.20s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.0002,
+      "p_live_percent": "0.0%",
+      "raw_score": 0.0432,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Threshold Gate (Spoof Detected)",
+      "gate_reason": "p(live)<=spoof-threshold:0.0002",
+      "passed": false
+    },
+    "final_decision": "SPOOF",
+    "crypto_verdict": {
+      "ok": true,
+      "reason": null,
+      "sha256": "3950dcc2704d\u2026",
+      "receipt": "lab-video_replay-1790486417_1790486417884_3950dcc2704d.json"
+    },
+    "telemetry": {
+      "challenge_id": "lab-video_replay-1790486417",
+      "confidence": 0.0002,
+      "decision": "SPOOF",
+      "expected_seq": "TURN_L,FAILED",
+      "hr_bpm": 5.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce19635782",
+      "roi_corr": 0.02,
+      "signal_quality": 0.6,
+      "snr": 0.05,
+      "timestamp_ms": 1790486417884
+    }
+  },
+  {
+    "session_id": "lab-challenge_mismatch-1790486417",
+    "timestamp_ms": 1790486417890,
+    "scenario_id": "challenge_mismatch",
+    "title": "5. Challenge Mismatch",
+    "category": "Behavioral Gate Evaluation",
+    "attack_type": "Uncooperative / Inattentive Human",
+    "media_input": "Live camera with genuine human applicant looking down / ignoring directional prompts.",
+    "expected_hypothesis": "Real human rPPG pulse (SNR 0.68, ROI 0.82), but challenge accuracy fails and latency > 1.8s. CRITICAL GATE TEST: System must route to UNCERTAIN (FR-GATE-3) \u2014 never automatically brand an uncooperative human as SPOOF.",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "\u2713 Verified",
+      "rppg": "\u2713 Pulse Active",
+      "behavior": "Mismatched",
+      "challenge": "Failed / Incomplete",
+      "camera": "\u2713 Calibrated",
+      "integrity": "\u2713 Enclave Valid",
+      "snr": "0.680",
+      "roi_corr": "0.820",
+      "hr_bpm": "68 bpm",
+      "timing_error": "1.95s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.9999,
+      "p_live_percent": "100.0%",
+      "raw_score": 0.9568,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Interactive Challenge Gate",
+      "gate_reason": "challenge-incomplete",
+      "passed": false
+    },
+    "final_decision": "UNCERTAIN",
+    "crypto_verdict": {
+      "ok": true,
+      "reason": null,
+      "sha256": "ed0e8f95272a\u2026",
+      "receipt": "lab-challenge_mismatch-1790486417_1790486417890_ed0e8f95272a.json"
+    },
+    "telemetry": {
+      "challenge_id": "lab-challenge_mismatch-1790486417",
+      "confidence": 0.9999,
+      "decision": "UNCERTAIN",
+      "expected_seq": "TURN_L,FAILED",
+      "hr_bpm": 68.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce38924542",
+      "roi_corr": 0.82,
+      "signal_quality": 0.85,
+      "snr": 0.68,
+      "timestamp_ms": 1790486417890
+    }
+  },
+  {
+    "session_id": "lab-insufficient_evidence-1790486417",
+    "timestamp_ms": 1790486417894,
+    "scenario_id": "insufficient_evidence",
+    "title": "6. Insufficient Evidence",
+    "category": "Sensing Gate Evaluation",
+    "attack_type": "Degraded Environmental Sensing",
+    "media_input": "Dark room, camera moving erratically, excessive frame drops (38%), session aborted early (3.5s).",
+    "expected_hypothesis": "Under-exposed frames, high drop rate, rPPG SNR cannot be resolved (< 0.06). CRITICAL GATE TEST: System must route to UNCERTAIN (FR-GATE-4) \u2014 never automatically label low quality as a malicious SPOOF.",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "Weak",
+      "rppg": "Insufficient / Flat",
+      "behavior": "Mismatched",
+      "challenge": "Failed / Incomplete",
+      "camera": "Degraded",
+      "integrity": "\u2713 Enclave Valid",
+      "snr": "0.060",
+      "roi_corr": "0.080",
+      "hr_bpm": "6 bpm",
+      "timing_error": "1.80s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.0002,
+      "p_live_percent": "0.0%",
+      "raw_score": 0.0432,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Sensing Quality Gate",
+      "gate_reason": "insufficient-quality:lost-lock,sensor-contamination",
+      "passed": false
+    },
+    "final_decision": "UNCERTAIN",
+    "crypto_verdict": {
+      "ok": true,
+      "reason": null,
+      "sha256": "a41e8151bd28\u2026",
+      "receipt": "lab-insufficient_evidence-1790486417_1790486417894_a41e8151bd28.json"
+    },
+    "telemetry": {
+      "challenge_id": "lab-insufficient_evidence-1790486417",
+      "confidence": 0.0002,
+      "decision": "UNCERTAIN",
+      "expected_seq": "TURN_L,FAILED",
+      "hr_bpm": 6.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce29825408",
+      "roi_corr": 0.08,
+      "signal_quality": 0.35,
+      "snr": 0.06,
+      "timestamp_ms": 1790486417894
+    }
+  },
+  {
+    "session_id": "lab-integrity_failure-1790486417",
+    "timestamp_ms": 1790486417899,
+    "scenario_id": "integrity_failure",
+    "title": "7. Hardware Integrity Failure",
+    "category": "Security Gate Evaluation",
+    "attack_type": "Rooted Device / Keystore Tamper",
+    "media_input": "Tampered transcript with altered biometric metrics or invalid ECDSA signature.",
+    "expected_hypothesis": "Integrity check fails (integrityOk = false) -> Immediate SPOOF gate verdict ('integrity-failure').",
+    "schema_status": "Valid (28 features conforms to edgeppg-1.0)",
+    "evidence": {
+      "face": "\u2713 Verified",
+      "rppg": "\u2713 Pulse Active",
+      "behavior": "\u2713 Consistent",
+      "challenge": "\u2713 Verified",
+      "camera": "\u2713 Calibrated",
+      "integrity": "Attestation Failed",
+      "snr": "0.740",
+      "roi_corr": "0.850",
+      "hr_bpm": "74 bpm",
+      "timing_error": "0.18s"
+    },
+    "model_output": {
+      "model_name": "XGBClassifier",
+      "p_live": 0.9999,
+      "p_live_percent": "100.0%",
+      "raw_score": 0.9568,
+      "thresholds": {
+        "live": 0.8,
+        "spoof": 0.2
+      }
+    },
+    "security_gates": {
+      "gate_evaluated": "Hardware Integrity Gate",
+      "gate_reason": "integrity-failure",
+      "passed": false
+    },
+    "final_decision": "SPOOF",
+    "crypto_verdict": {
+      "ok": false,
+      "reason": "bad-signature",
+      "sha256": "\u2026",
+      "receipt": "Rejected: bad-signature"
+    },
+    "telemetry": {
+      "challenge_id": "lab-integrity_failure-1790486417",
+      "confidence": 0.9999,
+      "decision": "SPOOF",
+      "expected_seq": "TURN_L,BLINK,FLASH_BLUE",
+      "hr_bpm": 74.0,
+      "model_version": "v2.1-edge",
+      "nonce": "labnonce23945395",
+      "roi_corr": 0.85,
+      "signal_quality": 0.88,
+      "snr": 0.74,
+      "timestamp_ms": 1790486417899
+    }
+  }
+]

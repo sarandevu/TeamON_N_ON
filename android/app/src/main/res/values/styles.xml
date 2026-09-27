@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stage 1 → Stage 2:
+         Dark, no-action-bar theme so the camera preview is visible.
+         NoActionBar is required because we render a PreviewView, not a
+         toolbar / actionbar overlay. -->
+    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:fontFamily">sans</item>
+    </style>
+</resources>

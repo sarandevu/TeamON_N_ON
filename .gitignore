@@ -1,0 +1,39 @@
+# Python
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Android & Gradle
+.gradle/
+**/build/
+android/.gradle/
+android/app/build/
+local.properties
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# IDE & OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Temporary artifacts & debug dumps
+*.png
+*.jpg
+*.jpeg
+window_dump*.xml
+cd
+opencode
