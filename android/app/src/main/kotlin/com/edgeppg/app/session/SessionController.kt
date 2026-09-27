@@ -277,29 +277,18 @@ class SessionController(
             val pCorr = livePeakRoiCorr
             val pHr = livePeakHrBpm
             when {
-                // Strong spoof: peak values stayed very low — no pulse ever detected.
-                pCorr < 0.20f || pSnr < 0.10f -> {
-                    com.edgeppg.app.Log.stage("session",
-                        "SPOOF-HEURISTIC: peakSnr=$pSnr peakCorr=$pCorr frames=$liveRppgFrameCount → P(LIVE)=0.05")
-                    0.05f
-                }
-                // Weak spoof: marginal values, unlikely to be a real person.
-                pCorr < 0.38f || pSnr < 0.15f -> {
-                    com.edgeppg.app.Log.stage("session",
-                        "SPOOF-HEURISTIC: peakSnr=$pSnr peakCorr=$pCorr frames=$liveRppgFrameCount → P(LIVE)=0.12")
-                    0.12f
-                }
-                // Confirmed live: strong spectral peak + cross-ROI agreement + valid HR.
-                pCorr >= 0.35f && pSnr >= 0.18f && pHr in 45f..190f -> {
+                // Confirmed live: strong spectral peak + cross-ROI agreement + valid HR in human range.
+                pCorr >= 0.32f && pSnr >= 0.14f && pHr in 45f..195f -> {
                     com.edgeppg.app.Log.stage("session",
                         "LIVE-HEURISTIC: peakSnr=$pSnr peakCorr=$pCorr peakHr=$pHr → P(LIVE)=0.90")
                     0.90f
                 }
-                // Borderline
+                // Presentation attack (spoof): static photo, video playback, or screen reflection.
+                // Lacks physiological pulse synchronization across facial ROIs.
                 else -> {
                     com.edgeppg.app.Log.stage("session",
-                        "BORDERLINE-HEURISTIC: peakSnr=$pSnr peakCorr=$pCorr peakHr=$pHr → P(LIVE)=0.50")
-                    0.50f
+                        "SPOOF-HEURISTIC: peakSnr=$pSnr peakCorr=$pCorr peakHr=$pHr frames=$liveRppgFrameCount → P(LIVE)=0.08")
+                    0.08f
                 }
             }
         } else if (liveRppgFrameCount > 0) {
