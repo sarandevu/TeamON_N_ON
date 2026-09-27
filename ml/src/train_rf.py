@@ -33,10 +33,40 @@ from ml.src.feature_schema import (
 from ml.src.dataset import (
     Dataset,
     REPO_ROOT,
+    DATA_DIR,
     dataset_fingerprint,
+    load_csv,
     make_synthetic_fixture,
     split_dataset_csv,
 )
+
+
+def load_raw_dataset(raw_dir: Path) -> Dataset:
+    """Load all per-session CSVs from data/raw/<subject>/<session>.csv.
+
+    Each CSV has exactly one data row (one VKYC session = one feature row).
+    Returns a combined Dataset ordered by subject for GroupShuffleSplit.
+    """
+    all_rows: list[dict] = []
+    for csv_path in sorted(raw_dir.rglob("*.csv")):
+        if csv_path.name == "ingest_summary.json":
+            continue
+        try:
+            ds = load_csv(csv_path)
+            all_rows.extend(ds.rows)
+        except Exception as exc:
+            import warnings
+            warnings.warn(f"Skipping {csv_path}: {exc}", stacklevel=2)
+    if not all_rows:
+        raise RuntimeError(
+            f"No valid CSV rows found under {raw_dir}. "
+            f"Run: python -m ml.src.ingest_videos <videos_folder> first."
+        )
+    return Dataset(
+        rows=all_rows,
+        subject_ids=[r["subject_id"] for r in all_rows],
+        feature_names=FEATURE_ORDER,
+    )
 from ml.src.calibration import PlattScaler, default_thresholds
 
 
@@ -165,13 +195,27 @@ def main() -> int:
             "collected (Requirements §PR-DAT-1).",
         ]
     else:
-        # Real-data path placeholder — read CSVs from data/processed/.
-        # We do NOT fabricate this branch; it raises until a real loader
-        # exists, so nobody can claim "trained on real data" by accident.
-        raise SystemExit(
-            "raw data source requires a real loader; not implemented yet. "
-            "Use --data-source synthetic for pipeline verification."
-        )
+        raw_dir = REPO_ROOT / "data" / "raw"
+        print(f"Loading real data from {raw_dir} …")
+        dataset = load_raw_dataset(raw_dir)
+        n_live  = sum(1 for r in dataset.rows if r.get("decision") == "LIVE")
+        n_spoof = sum(1 for r in dataset.rows if r.get("decision") == "SPOOF")
+        print(f"  {len(dataset)} rows: {n_live} LIVE, {n_spoof} SPOOF, "
+              f"{len(set(dataset.subject_ids))} subjects")
+        if n_live == 0 or n_spoof == 0:
+            raise SystemExit(
+                f"Need both LIVE and SPOOF rows to train. "
+                f"Found {n_live} LIVE, {n_spoof} SPOOF. "
+                f"Run ingest_videos with both LIVE and SPOOF videos."
+            )
+        split_paths = split_dataset_csv(dataset, REPO_ROOT / "data" / "splits")
+        status = "TRAINED_REAL_DATA"
+        notes  = [
+            f"Trained on {len(dataset)} real mobile-video sessions "
+            f"({n_live} LIVE, {n_spoof} SPOOF, "
+            f"{len(set(dataset.subject_ids))} subjects).",
+            "Subject-independent GroupShuffleSplit applied.",
+        ]
 
     result = train_random_forest(dataset)
     paths = write_artifact(args.out, result, dataset, split_paths,
