@@ -37,15 +37,15 @@
   "n_train_rows": 48,
   "train_auc": 1.0,
   "scaler": {
-    "a": 17.729685564535952,
-    "b": -8.679171612379472
+    "a": 17.6979698776513,
+    "b": -8.652184182203023
   },
   "thresholds": {
     "live": 0.8,
     "spoof": 0.2,
     "schema_version": "edgeppg-1.0"
   },
-  "dataset_fingerprint_sha256": "f525257e0e24f91eeff0114de92215a0909ee08b790c4289810d588d04242c8f",
+  "dataset_fingerprint_sha256": "6dd01ff4ab18c5a486ef36369cac7f1705b719741ced5fd6993d588e735534d0",
   "n_subjects": 8,
   "split_files": {
     "train": "E:\\EdgePPG\\data\\splits\\train.csv",

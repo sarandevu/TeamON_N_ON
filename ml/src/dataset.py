@@ -127,15 +127,49 @@ def _synth_spoof_row(rng: random.Random, subject_id: str, session_id: str) -> di
     return row
 
 
+def _synth_video_replay_spoof_row(rng: random.Random, subject_id: str, session_id: str) -> dict:
+    """A synthetic video replay SPOOF row: high face confidence/quality from high-res screen,
+    but near-zero rPPG pulse, low ROI correlation, timing error on active challenges, and
+    distorted optical reflection."""
+    row = empty_row(subject_id=subject_id, session_id=session_id, decision="SPOOF")
+    row["face_confidence"]                 = 0.92 + rng.uniform(-0.03, 0.03)
+    row["face_quality"]                    = 0.85 + rng.uniform(-0.05, 0.05)
+    row["rppg_snr"]                        = 0.04 + rng.uniform(0.0, 0.04)
+    row["rppg_peak_strength"]              = 0.04 + rng.uniform(0.0, 0.03)
+    row["rppg_hr_stability"]               = 0.15 + rng.uniform(-0.05, 0.05)
+    row["rppg_roi_agreement"]              = 0.02 + rng.uniform(-0.01, 0.03)
+    row["gaze_accuracy"]                   = 0.15 + rng.uniform(-0.05, 0.05)
+    row["head_accuracy"]                   = 0.15 + rng.uniform(-0.05, 0.05)
+    row["hand_accuracy"]                   = 0.10 + rng.uniform(-0.05, 0.05)
+    row["challenge_timing_error"]          = 0.88 + rng.uniform(0.0, 0.08)
+    row["optical_response_score"]          = 0.08 + rng.uniform(0.0, 0.04)
+    row["trusted_face_confidence"]         = 0.30 + rng.uniform(-0.05, 0.05)
+    row["trusted_face_quality"]            = 0.30 + rng.uniform(-0.05, 0.05)
+    row["trusted_gaze_accuracy"]           = 0.15 + rng.uniform(-0.05, 0.05)
+    row["trusted_head_accuracy"]           = 0.15 + rng.uniform(-0.05, 0.05)
+    row["trusted_hand_accuracy"]           = 0.10 + rng.uniform(-0.05, 0.05)
+    row["trusted_challenge_timing_error"]  = 0.90 + rng.uniform(0.0, 0.08)
+    row["cross_person_timing"]             = 0.15 + rng.uniform(-0.05, 0.05)
+    row["cross_person_interaction"]        = 0.15 + rng.uniform(-0.05, 0.05)
+    row["relative_motion_consistency"]     = 0.25 + rng.uniform(-0.05, 0.05)
+    row["participant_presence_consistency"]= 0.30 + rng.uniform(-0.05, 0.05)
+    row["challenge_sequence_consistency"]  = 0.15 + rng.uniform(-0.05, 0.05)
+    row["camera_quality"]                  = 0.85 + rng.uniform(-0.05, 0.05)
+    row["frame_drop_rate"]                 = 0.06 + rng.uniform(0.0, 0.04)
+    row["exposure_stability"]              = 0.75 + rng.uniform(-0.05, 0.05)
+    row["awb_stability"]                   = 0.70 + rng.uniform(-0.05, 0.05)
+    row["capture_duration"]                = 12.0 + rng.uniform(-1.0, 1.0)
+    row["device_integrity"]                = 1.0
+    return row
+
+
 def make_synthetic_fixture(n_subjects: int = 8,
                            sessions_per_subject: int = 6,
                            seed: int = 0xE9BE00) -> Dataset:
     """Build a deterministic synthetic dataset for pipeline verification.
 
-    Half subjects produce only LIVE rows; half only SPOOF rows. GroupShuffleSplit
-    on subject_id is a meaningful split because the labels are subject-correlated
-    — that's intentional, and is the same property the real data will have once
-    a real validation set exists.
+    Half subjects produce only LIVE rows; half produce SPOOF rows (photo + video replays).
+    GroupShuffleSplit on subject_id is a meaningful split because the labels are subject-correlated.
     """
     if n_subjects % 2 != 0:
         raise ValueError("n_subjects must be even (half LIVE, half SPOOF).")
@@ -148,6 +182,8 @@ def make_synthetic_fixture(n_subjects: int = 8,
             sess = f"{sid}-j{j:02d}"
             if is_live:
                 rows.append(_synth_live_row(rng, sid, sess))
+            elif j % 2 == 0:
+                rows.append(_synth_video_replay_spoof_row(rng, sid, sess))
             else:
                 rows.append(_synth_spoof_row(rng, sid, sess))
     for r in rows:
